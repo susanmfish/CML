@@ -1,0 +1,316 @@
+1                                                          The SAS System                              08:27 Tuesday, August 9, 2022
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+WARNING: Unable to copy SASUSER registry to WORK registry. Because of this, you will not see registry customizations during this 
+         session.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2016 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) Proprietary Software 9.4 (TS1M6) 
+      Licensed to BRISTOL-MYERS SQUIBB CO / JUNO THERAPEUTICS, Site 70163518.
+NOTE: This session is executing on the X64_10PRO  platform.
+
+
+
+NOTE: Analytical products:
+      
+      SAS/STAT 15.1
+      SAS/IML 15.1
+
+NOTE: Additional host information:
+
+ X64_10PRO WIN 10.0.19041  Workstation
+
+NOTE: SAS initialization used:
+      real time           2.17 seconds
+      cpu time            0.51 seconds
+      
+1          **************************************************************************
+2          ***  PROGRAM:     convert_CA180-653_Recon_OBIEE_ddmmmyyyy.sas
+3          ***
+4          ***  COPIED FROM:
+5          ***
+6          ***  AUTHOR:       Susan Fish
+7          ***
+8          ***  DATE WRITTEN: 08Mar2021
+9          ***
+10         ***  DESCRIPTION:  Create dataset for SAE Recon. from EDC AEs for dasatinib tx patients.
+11         ***
+12         ***
+13         ***  Programming notes:
+14         ***
+15         ***   Structure: Varies.
+16         ***
+17         ***
+18         ***  ASSUMPTIONS: N/A
+19         ***
+20         ***  INSTRUCTIONS FOR USER: N/A
+21         ***
+22         ***  INPUT:
+23         ***
+24         ***  OUTPUT:
+25         ***
+26         ***
+27         ***
+2                                          The SAS System              08:27 Tuesday, August 9, 2022
+
+28         ***  FORMATS: N/A
+29         ***
+30         ***  MACROS:
+31         ***    Internal:
+32         ***    External: none
+33         ***
+34         ***
+35         ***  CHANGES:
+36         ***
+37         ***
+38         ***************************************************************************;
+39         
+40         libname rawcmlae '\\bertha\users\RegistriesRWDC\Data\CA180653_CML\safety_aerecon';
+NOTE: Library RAWCMLAE does not exist.
+41         
+42         libname outcmlae '\\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata';
+NOTE: Library OUTCMLAE does not exist.
+43         
+44         %let today=09MAY2022;
+45         %put &today;
+09MAY2022
+46         
+47         
+48         
+49         proc format;
+50           value yn
+51              1 = 'Yes'
+52         	 0 = 'No'
+53         	 ;
+NOTE: Format YN has been output.
+54         run;
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+55         
+56         *** Get EDC and coded AE datasets, merge to apply coding;
+57         
+ERROR:  Windows error code: 53 in hc_disk_open for 
+       \\bertha\users\RegistriesRWDC\Data\CA180653_CML\safety_aerecon\ae.sas7bdat, The network path 
+       was not found.
+58         proc sort data=rawcmlae.ae (keep = SUBJECT AETERM AESER AETOXGR AESTDAT AESTDAT_INT
+58       ! AESTDAT_RAW AEENDAT_INT AEENDAT_RAW AEONGO AEACN AEREL RELTKI AEOUT ) out=ae
+58       ! (rename=(AESTDAT=AESTDATdel));
+ERROR: An I/O error has occurred on file RAWCMLAE.AE.DATA.
+59           by SUBJECT AETERM AESTDAT_INT AESTDAT_RAW AEENDAT_INT AEENDAT_RAW;
+60         run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+NOTE: Due to ERROR(s) above, SAS set option OBS=0, enabling syntax check mode. 
+      This prevents execution of subsequent data modification statements.
+WARNING: The data set WORK.AE may be incomplete.  When this step was stopped there were 0 
+3                                          The SAS System              08:27 Tuesday, August 9, 2022
+
+         observations and 0 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+61         
+
+
+ERROR:  Windows error code: 53 in hc_disk_open for 
+       \\bertha\users\RegistriesRWDC\Data\CA180653_CML\safety_aerecon\ae_coded.sas7bdat, The 
+       network path was not found.
+62         proc sort data=rawcmlae.ae_coded (keep = SUBJECT AETERM AEPT AESTDAT AESTDAT_INT
+62       ! AESTDAT_RAW AEENDAT_INT AEENDAT_RAW) out=ae_coded (rename=(AESTDAT=AESTDATdel));
+ERROR: An I/O error has occurred on file RAWCMLAE.AE_CODED.DATA.
+63           by SUBJECT AETERM AESTDAT_INT AESTDAT_RAW AEENDAT_INT AEENDAT_RAW;
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+64         run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.AE_CODED may be incomplete.  When this step was stopped there were 0 
+         observations and 0 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+65         
+
+
+66         data aeall;
+67           merge ae_coded (in=want) ae;
+68           by SUBJECT AETERM AESTDAT_INT AESTDAT_RAW AEENDAT_INT AEENDAT_RAW;
+69           if want;
+70           format AESTDAT AEENDAT date9.;
+71           SUBJECTID=substr(SUBJECT,5,5);
+72           AESTDAT=datepart(AESTDAT_INT);
+73           AEENDAT=datepart(AEENDAT_INT);
+74           temp=put(AEONGO,yn.);
+75           tempae1=upcase(AETERM);
+76           tempae2=upcase(AEPT);
+77           drop AESTDAT_INT AEENDAT_INT AEONGO AETERM AEPT;
+78         run;
+
+NOTE: Numeric values have been converted to character values at the places given by: 
+      (Line):(Column).
+      71:20   75:18   76:18   
+NOTE: The data set WORK.AEALL has 0 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+4                                          The SAS System              08:27 Tuesday, August 9, 2022
+
+      
+
+79         
+80         *** Get dasatinib treatment info ;
+81         
+ERROR:  Windows error code: 53 in hc_disk_open for 
+       \\bertha\users\RegistriesRWDC\Data\CA180653_CML\safety_aerecon\dt.sas7bdat, The network path 
+       was not found.
+82         proc sort data=rawcmlae.dt (keep = SITENUMBER subject ecstdat ecstdat_raw ecendat
+82       ! econgo)  out=dt;
+ERROR: An I/O error has occurred on file RAWCMLAE.DT.DATA.
+83           by subject;
+ERROR: No data set open to look up variables.
+84         run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.DT may be incomplete.  When this step was stopped there were 0 
+         observations and 0 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+85         
+
+
+86         data dt2;
+87           set dt;
+88           format dtxstdt dtxendt date9.;
+89           DTXSTDT=datepart(ecstdat);
+90           DTXENDT=datepart(ecendat);
+91           DTXONGO=put(econgo,yn.);
+92           SUBJECTID=substr(SUBJECT,5,5);
+93           dtxsmoyr=compress(substr(ecstdat_raw,4,8));
+94         drop ecstdat ecstdat_raw ecendat econgo;
+95         run;
+
+NOTE: Numeric values have been converted to character values at the places given by: 
+      (Line):(Column).
+      92:20   93:28   
+NOTE: The data set WORK.DT2 has 0 observations and 6 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+96         
+97         
+98         data mergeall;
+99           merge dt2 (in=want) aeall (in=ae);
+100          by subject;
+101          if want and ae;
+102            aestmoyr=compress(substr(aestdat_raw,4,8));
+103        run;
+
+5                                          The SAS System              08:27 Tuesday, August 9, 2022
+
+NOTE: Numeric values have been converted to character values at the places given by: 
+      (Line):(Column).
+      102:30   
+NOTE: The data set WORK.MERGEALL has 0 observations and 13 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+104        
+105        data aedt (drop=temp:) nodt;
+106          set mergeall;
+107            AEONGO=temp;
+108        	AETERM=tempae1;
+109        	AEPT=tempae2;
+110            if (AESTDAT < DTXSTDT) and (dtxsmoyr ^= aestmoyr) then output nodt;
+111        	  else if (AESTDAT < DTXSTDT) and (AESTDATdel^=.) then output nodt;
+112              else if (AESTDAT < DTXSTDT) and (dtxsmoyr=aestmoyr) then output aedt;
+113              else if (AESTDAT >= DTXSTDT >.z) then do;
+114                if DTXENDT=. then output aedt;
+115        	    else if (.z<DTXENDT) and (AESTDAT <=DTXENDT) then output aedt;
+116        	    else output nodt;
+117          end;
+118          else output nodt;
+119        
+120        run;
+
+NOTE: The data set WORK.AEDT has 0 observations and 14 variables.
+NOTE: The data set WORK.NODT has 0 observations and 17 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+121        
+122        proc sort data=aedt out=aedtsort;
+123          by subject aestdat aeterm;
+124        run;
+
+NOTE: The data set WORK.AEDTSORT has 0 observations and 0 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+125        
+126        data outcmlae.EDC_AE_recon_&today.;
+127              attrib SITENUMBER	label = "Protocol Site ID"	length=$4	format=$char4.
+128        		SUBJECTID	label = "Protocol Subject ID"	length=$10	format=$char5.
+129        		DTXSTDT	label="Dasatinib Start Date"	length=8 format=Date9.
+130        		DTXENDT	label="Dasatinib End Date"	length=8	format=Date9.
+131        		DTXONGO label="Dasatinib Ongoing?" length=$3 format=$char3.
+132        		AETERM	label="AE Verbatim Term (EDC)"	length=$100	format=$char100.
+133        		AEPT	label="AE Preferred Term (EDC)"	length=$100	format=$char100.
+6                                          The SAS System              08:27 Tuesday, August 9, 2022
+
+134        		AESER	label="AE Serious?"	length=$9	format=char9.
+135        		AETOXGR	label="AE Grade"	length=$21	format=char21.
+136        		AESTDAT	label="AE Start Date Imputed (EDC)"	length=8	format=DATE9.
+137        		AESTDAT_RAW	label="AE Start Date Raw (EDC)"	length=$11	format=$char11.
+138        		AEENDAT	label="AE Stop Date Imputed (EDC) "	length=8	format=DATE9.
+139        		AEENDAT_RAW	label="AE Stop Date Raw (EDC)"	length=$11	format=$char11.
+140        		AEONGO	label="AE Ongoing?"	length=$3	format=$char3.
+141        		AEACN	label="AE Action"	length=$5 format=$char5.
+142        		AEREL	label="AE Relationship to Treatment"	length=$33	format=char33.
+143        		RELTKI	label="Treatment was TKI?"	length=$9	format=char9.
+144        		AEOUT	label="AE Outcome" length=$66	format=char66.
+145        		;
+146        	set aedtsort;
+147        	drop subject ecstdat_raw ecendat_raw dtxsmoyr aestmoyr AESTDATdel AEENDATdel;
+148        run;
+
+ERROR:  Windows error code: 53 in hc_disk_open for 
+       \\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata\edc_ae_recon_09may2022.s
+       as7bdat, The network path was not found.
+ERROR: An I/O error has occurred on file OUTCMLAE.EDC_AE_RECON_09MAY2022.DATA.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+149        
+
+ERROR: Errors printed on pages 2,3,4,6.
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           16.03 seconds
+      cpu time            0.71 seconds
+      

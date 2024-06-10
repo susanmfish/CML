@@ -1,0 +1,147 @@
+1                                                          The SAS System                              08:27 Tuesday, August 9, 2022
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+WARNING: Unable to copy SASUSER registry to WORK registry. Because of this, you will not see registry customizations during this 
+         session.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2016 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) Proprietary Software 9.4 (TS1M6) 
+      Licensed to BRISTOL-MYERS SQUIBB CO / JUNO THERAPEUTICS, Site 70163518.
+NOTE: This session is executing on the X64_10PRO  platform.
+
+
+
+NOTE: Analytical products:
+      
+      SAS/STAT 15.1
+      SAS/IML 15.1
+
+NOTE: Additional host information:
+
+ X64_10PRO WIN 10.0.19041  Workstation
+
+NOTE: SAS initialization used:
+      real time           2.03 seconds
+      cpu time            0.35 seconds
+      
+1          libname rawcml '\\bertha\users\RegistriesRWDC\Data\CA180653_CML\RawData';
+NOTE: Library RAWCML does not exist.
+2          libname analcml '\\bertha\users\RegistriesRWDC\Data\CA180653_CML\AnalysisDatasets';
+NOTE: Library ANALCML does not exist.
+3          
+4          
+5          libname outcmlae '\\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata';
+NOTE: Library OUTCMLAE does not exist.
+6          
+7          %let today=09MAY2022;
+8          %put &today;
+09MAY2022
+9          
+10         
+11         
+12         PROC IMPORT OUT= ca180653_recon_obiee_&today.
+13                     DATAFILE=
+13       ! "\\bertha\users\RegistriesRWDC\Data\CA180653_CML\safety_aerecon\CA180653_Recon_OBIEE_&tod
+13       ! ay._noheader.xlsx"
+14                     DBMS=EXCEL REPLACE;
+15              RANGE="Sheet1$";
+16              GETNAMES=YES;
+17              MIXED=NO;
+18              SCANTEXT=YES;
+19              USEDATE=YES;
+20              SCANTIME=YES;
+21         RUN;
+2                                          The SAS System              08:27 Tuesday, August 9, 2022
+
+
+ERROR: Unable to open file 
+       \\bertha\users\RegistriesRWDC\Data\CA180653_CML\safety_aerecon\CA180653_Recon_OBIEE_09MAY2022
+       _noheader.xlsx. It does not  exist or it is already opened exclusively by another user, or 
+       you need permission to view its data.
+NOTE: The SAS System stopped processing this step because of errors.
+NOTE: PROCEDURE IMPORT used (Total process time):
+      real time           0.12 seconds
+      cpu time            0.04 seconds
+      
+22         
+
+
+23         data outcmlae.ca180653_recon_obiee_&today.;
+24           set ca180653_recon_obiee_&today.  (rename=(Protocol_Number=PROTNUMBER
+24       ! Protocol_Site_ID=SITENUMBER Protocol_Subject_ID=SUBJECTID Case_Number=CASENUMBER
+25                                                     Verbatim_Term=AETERMS Preferred_Term=AEPTS
+25       ! Term_Highlighted_by_Reporter=REPHL
+26                                                     Event_Onset_Date=AESTDATS_RAW
+26       ! Reporter_Causality=REPCAUSE Serious_Category__Event_Level_=SERCAT
+27                                                     Event_Outcome=AEOUTS Date_of_Death=DEATHDT));
+ERROR: File WORK.CA180653_RECON_OBIEE_09MAY2022.DATA does not exist.
+28                 attrib PROTNUMBER	label = "Protocol Number"	length=$9	format=$char9.
+29                 SITENUMBER	label = "Protocol Site ID"	length=$16	format=$char16.
+30         		SUBJECTID	label = "Protocol Subject ID"	length=$10	format=$char10.
+31         		CASENUMBER	label = "Case Number"	length=$15	format=$char15.
+32                 AETERMS	label="AE Verbatim Term (Safety)"	length=$100	format=$char100.
+33         		AEPTS	label="AE Preferred Term (Safety)"	length=$100	format=$char100.
+34         		REPHL	label="Term Highlighted by Reporter?"	length=$1	format=$char1.
+35         		AESTDATS	label="AE Onset Date Imputed(Safety)"	length=8	format=DATE9.
+36         		AESTDATS_RAW	label="AE Start Date Raw (Safety)"	length=$11	format=$char11.
+37         		REPCAUSE	label="Reporter Causality (Relationship)"	length=$14	format=$char14.
+38         		SERCAT	label="Serious Category (Event Level)"	length=$7	format=$char7.
+39         		AEOUTS	label="Event Outcome (Safety)" length=$26	format=$char26.
+40         		DEATHDT label="Date of Death" length=$11 format=$char11.
+41         		temp1 format=$char10.
+42         		temp2 format=$char10.
+43         		;
+44         
+45            AEPTS=upcase(AEPTS);
+46            AETERMS=upcase(AETERMS);
+47            temp1=substr(SUBJECTID,5,5);
+48            temp2=substr(SUBJECTID,6,5);
+49         
+50            if length(SUBJECTID)=9 then do;
+51             SUBJECTID=temp1;
+52           end;
+53           else if length(SUBJECTID)=10 then do;
+54             SUBJECTID=temp2;
+55           end;
+56           else SUBJECTID=SUBJECTID;
+57           if SUBJECTID = '-0008' then SUBJECTID='00008';
+58         
+59           if length(AESTDATS_RAW)<11 then do;
+3                                          The SAS System              08:27 Tuesday, August 9, 2022
+
+60             if length(AESTDATS_RAW)=4 then tempdt='01-Jan'||AESTDATS_RAW;
+61              else if length(AESTDATS_RAW)=8 then tempdt='01-'||AESTDATS_RAW;
+62         	AESTDATS=input(tempdt,date11.);
+63           end;
+64           else do;
+65             AESTDATS=input(AESTDATS_RAW,date11.);
+66           end;
+67           if PROTNUMBER=' ' then delete;
+68           drop temp:;
+69          run;
+
+ERROR:  Windows error code: 53 in hc_disk_open for 
+       \\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata\ca180653_recon_obiee_09m
+       ay2022.sas7bdat, The network path was not found.
+ERROR: An I/O error has occurred on file OUTCMLAE.CA180653_RECON_OBIEE_09MAY2022.DATA.
+NOTE: The SAS System stopped processing this step because of errors.
+NOTE: Due to ERROR(s) above, SAS set option OBS=0, enabling syntax check mode. 
+      This prevents execution of subsequent data modification statements.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+70         
+71         
+
+ERROR: Errors printed on pages 2,3.
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           15.27 seconds
+      cpu time            0.53 seconds
+      

@@ -1,0 +1,503 @@
+1                                                          The SAS System                              08:27 Tuesday, August 9, 2022
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+WARNING: Unable to copy SASUSER registry to WORK registry. Because of this, you will not see registry customizations during this 
+         session.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2016 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) Proprietary Software 9.4 (TS1M6) 
+      Licensed to BRISTOL-MYERS SQUIBB CO / JUNO THERAPEUTICS, Site 70163518.
+NOTE: This session is executing on the X64_10PRO  platform.
+
+
+
+NOTE: Analytical products:
+      
+      SAS/STAT 15.1
+      SAS/IML 15.1
+
+NOTE: Additional host information:
+
+ X64_10PRO WIN 10.0.19041  Workstation
+
+NOTE: SAS initialization used:
+      real time           1.91 seconds
+      cpu time            0.46 seconds
+      
+1          **************************************************************************
+2          ***  PROGRAM:     l_ae_recon_ddmmmyyyy.sas
+3          ***
+4          ***  COPIED FROM:
+5          ***
+6          ***  AUTHOR:       Susan Fish
+7          ***
+8          ***  DATE WRITTEN: 08Mar2021
+9          ***
+10         ***  DESCRIPTION:  Create combined AE/Safety dataset for SAE Recon.
+11         ***
+12         ***
+13         ***  Programming notes:
+14         ***
+15         ***   Structure: Varies.
+16         ***
+17         ***
+18         ***  ASSUMPTIONS: N/A
+19         ***
+20         ***  INSTRUCTIONS FOR USER: N/A
+21         ***
+22         ***  INPUT:
+23         ***
+24         ***  OUTPUT:
+25         ***
+26         ***
+27         ***
+2                                          The SAS System              08:27 Tuesday, August 9, 2022
+
+28         ***  FORMATS: N/A
+29         ***
+30         ***  MACROS:
+31         ***    Internal:
+32         ***    External: none
+33         ***
+34         ***
+35         ***  CHANGES:
+36         ***
+37         ***
+38         ***************************************************************************;
+39         
+40         libname rawcmlae '\\bertha\users\RegistriesRWDC\Data\CA180653_CML\rawdata';
+NOTE: Library RAWCMLAE does not exist.
+41         
+42         libname outcmlae '\\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata';
+NOTE: Library OUTCMLAE does not exist.
+43         
+44         %let today=09MAY2022;
+45         %put &today;
+09MAY2022
+46         
+47         proc format;
+48           value yn
+49              1 = 'Yes'
+50         	 0 = 'No'
+51         	 ;
+NOTE: Format YN has been output.
+52         run;
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+53         
+54         *** Get EDC and coded AE datasets, merge to apply coding;
+55         
+ERROR:  Windows error code: 53 in hc_disk_open for 
+       \\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata\ca180653_recon_obiee_09m
+       ay2022.sas7bdat, The network path was not found.
+56         proc sort data=outcmlae.Ca180653_recon_obiee_&today. (drop=protnumber rephl sercat)
+56       ! out=safety_&today. (rename=(AEPTS=AEPT));
+ERROR: An I/O error has occurred on file OUTCMLAE.CA180653_RECON_OBIEE_09MAY2022.DATA.
+57           by SITENUMBER SUBJECTID AEPTS AESTDATS;
+58         run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+NOTE: Due to ERROR(s) above, SAS set option OBS=0, enabling syntax check mode. 
+      This prevents execution of subsequent data modification statements.
+WARNING: The data set WORK.SAFETY_09MAY2022 may be incomplete.  When this step was stopped there 
+         were 0 observations and 0 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.01 seconds
+3                                          The SAS System              08:27 Tuesday, August 9, 2022
+
+      cpu time            0.01 seconds
+      
+59         
+
+
+60         data safety_&today.;
+61           set safety_&today.;
+62           format mergedat date9.;
+63           mergedat=AESTDATS;
+64         run;
+
+NOTE: The data set WORK.SAFETY_09MAY2022 has 0 observations and 2 variables.
+WARNING: Data set WORK.SAFETY_09MAY2022 was not replaced because this step was stopped.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+65         
+66         
+ERROR:  Windows error code: 53 in hc_disk_open for 
+       \\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata\edc_ae_recon_09may2022.s
+       as7bdat, The network path was not found.
+67         proc sort data=outcmlae.Edc_ae_recon_&today. (keep = SITENUMBER SUBJECTID AETERM AEPT
+67       ! AESTDAT AESTDAT_RAW AEREL AEOUT) out=edc_&today.;
+ERROR: An I/O error has occurred on file OUTCMLAE.EDC_AE_RECON_09MAY2022.DATA.
+68           by SITENUMBER SUBJECTID AEPT AESTDAT;
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+69         run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.EDC_09MAY2022 may be incomplete.  When this step was stopped there were 
+         0 observations and 0 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+70         
+
+
+71         data edc_&today.;
+72           set edc_&today.;
+73           format mergedat date9.;
+74           mergedat=AESTDAT;
+75         run;
+
+NOTE: The data set WORK.EDC_09MAY2022 has 0 observations and 2 variables.
+WARNING: Data set WORK.EDC_09MAY2022 was not replaced because this step was stopped.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+4                                          The SAS System              08:27 Tuesday, August 9, 2022
+
+      
+
+76         
+77         data both edcmis (keep = SITENUMBER SUBJECTID CASENUMBER AETERMS AEPT AESTDATS
+77       ! AESTDATS_RAW REPCAUSE AEOUTS EDCF SAFF) safmis (keep=SITENUMBER SUBJECTID AETERM AEPT
+77       ! AESTDAT AESTDAT_RAW AEREL AEOUT EDCF SAFF);
+78           merge safety_&today. (in=saf) edc_&today. (in=edc) ;
+79            by SITENUMBER SUBJECTID AEPT mergedat;
+80            if edc then EDCF=1;
+81            if saf then SAFF=1;
+82            if edcf=1 and saff=. then output safmis;
+83            else if saff=1 and edcf=. then output edcmis;
+84            else if (edcf=1 and saff=1) and (AESTDAT^=AESTDATS) then do;
+85                output safmis;
+86         	   output edcmis;
+87            end;
+88         	
+89            else output both;
+90         run;
+
+WARNING: The variable SITENUMBER in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable SUBJECTID in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable CASENUMBER in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable AETERMS in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable AEPT in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable AESTDATS_RAW in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable REPCAUSE in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable AEOUTS in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable SITENUMBER in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable SUBJECTID in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable AETERM in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable AEPT in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable AESTDAT_RAW in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable AEREL in the DROP, KEEP, or RENAME list has never been referenced.
+WARNING: The variable AEOUT in the DROP, KEEP, or RENAME list has never been referenced.
+NOTE: The data set WORK.BOTH has 0 observations and 4 variables.
+NOTE: The data set WORK.EDCMIS has 0 observations and 3 variables.
+NOTE: The data set WORK.SAFMIS has 0 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.01 seconds
+      
+
+91         
+92         options ls=150;
+93         /*
+94         proc freq data=both;
+95           format AEPT $char50. ;
+96           tables SITENUMBER*SUBJECTID*AEPT /list missing;
+97         run;
+98         */
+99         data all;
+100          set both edcmis safmis;
+101        run;
+5                                                                   The SAS System                                       08:27 Tuesday, August 9, 2022
+
+
+NOTE: The data set WORK.ALL has 0 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+102        
+103        proc sort data=all out=allsort;
+104          by SITENUMBER SUBJECTID AEPT;
+ERROR: Variable SITENUMBER not found.
+ERROR: Variable SUBJECTID not found.
+ERROR: Variable AEPT not found.
+105        run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.ALLSORT may be incomplete.  When this step was stopped there were 0 observations and 0 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+106        
+
+
+107        proc sort data=edc_&today. (keep=SITENUMBER SUBJECTID DTXSTDT DTXENDT DTXONGO) out=dtx;
+ERROR: The variable SITENUMBER in the DROP, KEEP, or RENAME list has never been referenced.
+ERROR: The variable SUBJECTID in the DROP, KEEP, or RENAME list has never been referenced.
+ERROR: The variable DTXSTDT in the DROP, KEEP, or RENAME list has never been referenced.
+ERROR: The variable DTXENDT in the DROP, KEEP, or RENAME list has never been referenced.
+ERROR: The variable DTXONGO in the DROP, KEEP, or RENAME list has never been referenced.
+108          by SITENUMBER SUBJECTID;
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+109        run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.DTX may be incomplete.  When this step was stopped there were 0 observations and 0 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+110        
+
+
+111        data allsort2;
+112          retain SITENUMBER SUBJECTID CASENUMBER AETERM AETERMS  AEPT DTXSTDT DTXENDT DTXONGO AESTDAT_RAW AESTDAT AESTDATS_RAW AESTDATS AEOUT
+112      ! AEOUTS AEREL REPCAUSE DEATHDT;
+113          merge allsort dtx;
+114          by SITENUMBER SUBJECTID;
+115        run;
+
+NOTE: The data set WORK.ALLSORT2 has 0 observations and 18 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+6                                                                   The SAS System                                       08:27 Tuesday, August 9, 2022
+
+      cpu time            0.01 seconds
+      
+
+116        
+117        
+118        data sae_recon_&today.;
+119        
+120         attrib DATASC label= "Source"
+121                SITENUMBER	label = "Site Number"	length=$4	format=$char4.
+122        		SUBJECTID	label = "Subject Number"	length=$10	format=$char5.
+123        		CASENUMBER label = "Safety Case Number" length=$15 format=$char15.
+124        		COMBTERM	label="Adverse Event"	length=$200	format=$char200.
+125        		AEPT	label="MedDRA Preferred Term"	length=$100	format=$char100.
+126        		STARTDT	label="AE Start Date (Imputed)"	length=8	format=DATE9.
+127                STARTDT_RAW label="AE Start Date (Raw)" length=$11 format=$char11.
+128        		AEOUTS	label="Outcome"	length=$30 format=$char30.
+129        		DEATHDT	label="Date of Death"	length=$11	format=$char11.
+130        		AEREL	label="AE Relationship to Treatment (Rave)"	length=$33	format=char33.
+131        		REPCAUSE	label="Reporter Causality/Relationship (Safety)"	length=$15	format=$char15.
+132        
+133        		;
+134           set allsort2;
+ERROR: Variable SITENUMBER has been defined as both character and numeric.
+ERROR: Variable SUBJECTID has been defined as both character and numeric.
+ERROR: Variable CASENUMBER has been defined as both character and numeric.
+ERROR: Variable AEPT has been defined as both character and numeric.
+ERROR: Variable AEOUTS has been defined as both character and numeric.
+ERROR: Variable AEREL has been defined as both character and numeric.
+ERROR: Variable REPCAUSE has been defined as both character and numeric.
+ERROR: Variable DEATHDT has been defined as both character and numeric.
+135           If AETERM^='' and AETERMS^=' ' then do;
+136             DATASC='Safety & Rave';
+137        	 if AETERM ^= AETERMS then COMBTERM="Rave:"||left(trim(AETERM))||"/ Safety:"||left(trim(AETERMS));
+138        	   else COMBTERM=left(trim(AETERM));
+139        	   STARTDT=AESTDAT;
+140        	   STARTDT_RAW=AESTDAT_RAW;
+141             end;
+142             else if AETERM^='' and AETERMS=' ' then do;
+143               DATASC='Rave';
+144        	   COMBTERM=left(trim(AETERM));
+145        	   STARTDT=AESTDAT;
+146        	   STARTDT_RAW=AESTDAT_RAW;
+147             end;
+148             else if AETERM='' and AETERMS^=' ' then do;
+149               DATASC='Safety';
+150        	   COMBTERM=left(trim(AETERMS));
+151        	   STARTDT=AESTDATS;
+152        	   STARTDT_RAW=AESTDATS_RAW;
+153           end;
+154        drop AETERM: AESTDAT:;
+155        run;
+
+NOTE: Character values have been converted to numeric values at the places given by: (Line):(Column).
+      135:15   135:31   142:22   142:37   148:21   148:37   
+7                                                                   The SAS System                                       08:27 Tuesday, August 9, 2022
+
+NOTE: Numeric values have been converted to character values at the places given by: (Line):(Column).
+      137:57   137:90   138:29   140:17   144:24   146:17   150:24   152:17   
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.SAE_RECON_09MAY2022 may be incomplete.  When this step was stopped there were 0 observations and 16 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+156        
+157        data sae_recon_&today.;
+158         retain DATASC SITENUMBER SUBJECTID CASENUMBER COMBTERM AEPT DTXSTDT DTXENDT DTXONGO STARTDT STARTDT_RAW AEREL REPCAUSE AEOUT AEOUTS
+158      ! DEATHDT;
+159        
+160          set sae_recon_&today.;
+161        run;
+
+NOTE: The data set WORK.SAE_RECON_09MAY2022 has 0 observations and 16 variables.
+WARNING: Data set WORK.SAE_RECON_09MAY2022 was not replaced because this step was stopped.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+162        
+163        *** Add Flag for Obs in previous review: Merge with prior version by site, subject, preferred term, imputed start date***;
+164        
+165        %let prior=25JAN2022;
+166        %put &prior;
+25JAN2022
+167        
+168        %let today=09MAY2022;
+169        %put &today;
+09MAY2022
+170        
+171        
+172        
+ERROR:  Windows error code: 53 in hc_disk_open for \\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata\sae_recon_25jan2022.sas7bdat, 
+       The network path was not found.
+173        proc sort data=outcmlae.sae_recon_&prior. out=chk_sae_recon_&prior. (drop=flag);
+ERROR: An I/O error has occurred on file OUTCMLAE.SAE_RECON_25JAN2022.DATA.
+174          by SITENUMBER SUBJECTID CASENUMBER AEPT COMBTERM STARTDT /*STARTDT_RAW*/;
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+175        run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.CHK_SAE_RECON_25JAN2022 may be incomplete.  When this step was stopped there were 0 observations and 0 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+8                                                                   The SAS System                                       08:27 Tuesday, August 9, 2022
+
+      cpu time            0.00 seconds
+      
+176        
+
+
+177        proc sort data=sae_recon_&today. out=sae_recon_&today.;
+178          by SITENUMBER SUBJECTID CASENUMBER AEPT COMBTERM STARTDT /*STARTDT_RAW*/;
+179        run;
+
+NOTE: The data set WORK.SAE_RECON_09MAY2022 has 0 observations and 0 variables.
+WARNING: Data set WORK.SAE_RECON_09MAY2022 was not replaced because new file is incomplete.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+180        
+181        data flagprev (keep= SITENUMBER SUBJECTID CASENUMBER AEPT COMBTERM STARTDT FLAG);
+182          merge chk_sae_recon_&prior. (in=old) sae_recon_&today. (in=new) ;
+183          by SITENUMBER SUBJECTID CASENUMBER AEPT COMBTERM STARTDT /*STARTDT_RAW*/;
+184          if new and not old then FLAG='New';
+185          if FLAG^='New' then delete;
+186        run;
+
+NOTE: The data set WORK.FLAGPREV has 0 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+187        
+188        data outcmlae.sae_recon_&today. (drop=edcf saff);
+189          merge sae_recon_&today. flagprev;
+190          by SITENUMBER SUBJECTID CASENUMBER AEPT COMBTERM STARTDT;
+191        
+192        run;
+
+ERROR:  Windows error code: 53 in hc_disk_open for \\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata\sae_recon_09may2022.sas7bdat, 
+       The network path was not found.
+ERROR: An I/O error has occurred on file OUTCMLAE.SAE_RECON_09MAY2022.DATA.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+193        
+194        /* New to select rave only patients for emergency case creation */
+195        
+ERROR:  Windows error code: 53 in hc_disk_open for \\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata\sae_recon_25jan2022.sas7bdat, 
+       The network path was not found.
+196        proc sort data=outcmlae.sae_recon_25JAN2022 (keep= sitenumber subjectid datasc) out=raveonly nodupkey;
+ERROR: An I/O error has occurred on file OUTCMLAE.SAE_RECON_25JAN2022.DATA.
+197          by sitenumber subjectid;
+ERROR: No data set open to look up variables.
+9                                                                   The SAS System                                       08:27 Tuesday, August 9, 2022
+
+ERROR: No data set open to look up variables.
+198          where DATASC='Rave';
+WARNING: No data sets qualify for WHERE processing.
+199        run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.RAVEONLY may be incomplete.  When this step was stopped there were 0 observations and 0 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+200        
+
+
+ERROR:  Windows error code: 53 in hc_disk_open for 
+       \\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata\edc_ae_recon_05oct2021.sas7bdat, The network path was not found.
+201        proc sort data=outcmlae.Edc_ae_recon_05OCT2021 out=edc_ae;
+ERROR: An I/O error has occurred on file OUTCMLAE.EDC_AE_RECON_05OCT2021.DATA.
+202          by SITENUMBER SUBJECTID AEPT AESTDAT;
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+ERROR: No data set open to look up variables.
+203        run;
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK.EDC_AE may be incomplete.  When this step was stopped there were 0 observations and 0 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+204        
+
+
+205        data ravepats;
+206          merge raveonly (in=want) edc_ae;
+207          by SITENUMBER SUBJECTID;
+208          if want;
+209        run;
+
+NOTE: The data set WORK.RAVEPATS has 0 observations and 0 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+ERROR: Errors printed on pages 2,3,5,6,7,8,9.
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           14.42 seconds
+      cpu time            0.90 seconds
+      

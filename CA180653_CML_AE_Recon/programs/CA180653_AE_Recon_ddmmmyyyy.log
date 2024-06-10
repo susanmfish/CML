@@ -1,0 +1,151 @@
+1                                                          The SAS System                              08:28 Tuesday, August 9, 2022
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+WARNING: Unable to copy SASUSER registry to WORK registry. Because of this, you will not see registry customizations during this 
+         session.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2016 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) Proprietary Software 9.4 (TS1M6) 
+      Licensed to BRISTOL-MYERS SQUIBB CO / JUNO THERAPEUTICS, Site 70163518.
+NOTE: This session is executing on the X64_10PRO  platform.
+
+
+
+NOTE: Analytical products:
+      
+      SAS/STAT 15.1
+      SAS/IML 15.1
+
+NOTE: Additional host information:
+
+ X64_10PRO WIN 10.0.19041  Workstation
+
+NOTE: SAS initialization used:
+      real time           1.13 seconds
+      cpu time            0.31 seconds
+      
+1          
+2          **************************************************************************
+3          ***  PROGRAM:     l_ae_recon_ddmmmyyyy.sas
+4          ***
+5          ***  COPIED FROM:
+6          ***
+7          ***  AUTHOR:       Susan Fish
+8          ***
+9          ***  DATE WRITTEN: 08Mar2021
+10         ***
+11         ***  DESCRIPTION:  Create combined AE/Safety dataset for SAE Recon.
+12         ***
+13         ***
+14         ***  Programming notes:
+15         ***
+16         ***   Structure: Varies.
+17         ***
+18         ***
+19         ***  ASSUMPTIONS: N/A
+20         ***
+21         ***  INSTRUCTIONS FOR USER: N/A
+22         ***
+23         ***  INPUT:
+24         ***
+25         ***  OUTPUT:
+26         ***
+27         ***
+2                                          The SAS System              08:28 Tuesday, August 9, 2022
+
+28         ***
+29         ***  FORMATS: N/A
+30         ***
+31         ***  MACROS:
+32         ***    Internal:
+33         ***    External: none
+34         ***
+35         ***
+36         ***  CHANGES:
+37         ***
+38         ***
+39         ***************************************************************************;
+40         
+41         libname rawcmlae '\\bertha\users\RegistriesRWDC\Data\CA180653_CML\RawData';
+NOTE: Library RAWCMLAE does not exist.
+42         
+43         libname outcmlae '\\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata';
+NOTE: Library OUTCMLAE does not exist.
+44         
+45         %let today=09MAY2022;
+46         %put &today;
+09MAY2022
+47         
+48         
+NOTE: PROCEDURE EXPORT used (Total process time):
+      real time           1.16 seconds
+      cpu time            0.06 seconds
+      
+ERROR: User asked for termination
+NOTE: The SAS System stopped processing this step because of errors.
+49         proc export
+50           data=outcmlae.Sae_recon_&today.
+51           outfile="\\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\output\CA180653_A
+51       ! E_recon_&today..xlsx"
+52           label
+53           dbms=xlsx
+54           replace;
+55           sheet="AE/SAE Recon";
+56         run;
+57         
+
+
+58         proc export
+59           data=outcmlae.EDC_AE_recon_&today.
+60           outfile="\\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\output\CA180653_A
+60       ! E_recon_&today..xlsx"
+61           label
+62           dbms=xlsx
+63           replace;
+64           sheet="AE EDC";
+65         run;
+
+ERROR:  Windows error code: 53 in hc_disk_open for 
+       \\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata\edc_ae_recon_09may2022.s
+3                                          The SAS System              08:28 Tuesday, August 9, 2022
+
+       as7bdat, The network path was not found.
+ERROR: An I/O error has occurred on file OUTCMLAE.EDC_AE_RECON_09MAY2022.DATA.
+NOTE: The SAS System stopped processing this step because of errors.
+NOTE: PROCEDURE EXPORT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+66         
+
+
+67         proc export
+68           data=outcmlae.Ca180653_recon_obiee_&today.
+69           outfile="\\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\output\CA180653_A
+69       ! E_recon_&today..xlsx"
+70           label
+71           dbms=xlsx
+72           replace;
+73           sheet="SAFETY";
+74         run;
+
+ERROR:  Windows error code: 53 in hc_disk_open for 
+       \\bertha\users\RegistriesRWDC\Projects\CA180653_CML_AE_Recon\outdata\ca180653_recon_obiee_09m
+       ay2022.sas7bdat, The network path was not found.
+ERROR: An I/O error has occurred on file OUTCMLAE.CA180653_RECON_OBIEE_09MAY2022.DATA.
+NOTE: The SAS System stopped processing this step because of errors.
+NOTE: PROCEDURE EXPORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+ERROR: Errors printed on pages 2,3.
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           8.64 seconds
+      cpu time            0.48 seconds
+      
